@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter_app_tracking/api/call_api.dart';
-import 'package:flutter_app_tracking/model/application_model.dart';
 import 'package:flutter_app_tracking/utils/contant.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
@@ -8,7 +7,6 @@ import 'package:path_provider/path_provider.dart';
 
 class Repository{
   late Box box;
-
   final FlutterSecureStorage storage = new FlutterSecureStorage();
 
   Future<bool> hasToken() async {
@@ -19,12 +17,10 @@ class Repository{
       return false;
     }
   }
-
   Future<String?> getToken()async{
     var value = await storage.read(key: 'token');
     return value;
   }
-
   Future<void> persistToken(String token) async {
     await storage.write(key: 'token', value: token);
   }
@@ -32,7 +28,6 @@ class Repository{
     storage.delete(key: 'token');
     storage.deleteAll();
   }
-
   Future login(String userName,String password) async {
     var data= {
       'username': userName,
@@ -54,14 +49,14 @@ class Repository{
     }
 
   }
-
   Future <bool> fetchData() async {
     await openBox();
 
      try{
        final response = await CallAPi().postDataWithAuth(null,'mobile/application_list/');
        if (response.statusCode == 200) {
-         var body= json.decode(response.body);
+         var body=(json.decode(utf8.decode(response.bodyBytes)));
+        // var body= json.decode(response.body);
          Contant.appData=body['data'];
          await addData(Contant.appData);
          // data.map((app)=>application.add(ApplicationModel.fromJson(app))).toList();
@@ -81,19 +76,14 @@ class Repository{
     return Future.value(true);
 
   }
-
-
-
   Future openBox() async{
   var dir=await getApplicationDocumentsDirectory();
   Hive.init(dir.path);
   box= await Hive.openBox('data');
   return;
-
-
+  
   }
-
-Future addData(data) async{
+  Future addData(data) async{
     await box.clear();
     for(var d in data){
       box.add(d);
